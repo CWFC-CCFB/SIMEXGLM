@@ -5,11 +5,11 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.4.2.jar"
+repiceaFilename <- "repicea-1.6.3.jar"
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")
-  packageStartupMessage("The SIMEXGLM package implements the SIMEX procedure for logistic model!")
+  packageStartupMessage("The SIMEXGLM package implements the SIMEX procedure for logistic models!")
   packageStartupMessage("Please, make sure that Java (version 8 or later) is installed on your computer.")
   packageStartupMessage("For more information, visit https://github.com/CWFC-CCFB/SIMEXGLM .")
 }
@@ -29,10 +29,24 @@ repiceaFilename <- "repicea-1.4.2.jar"
 
 
 #'
+#' A fake data.frame object for an example of the SIMEX method
+#'
+#' @docType data
+#'
+#' @usage data(simexExample)
+#'
+#' @keywords datasets
+#'
+#' @examples
+#' data(simexExample)
+"simexExample"
+
+
+#'
 #' Extends the shutdownJava function of the J4R package
 #'
 #' @export
-shutdownJava <- function() {
+shutdownClient <- function() {
   if (J4R::isConnectedToJava()) {
     J4R::shutdownClient()
   }
@@ -50,42 +64,49 @@ shutdownJava <- function() {
 }
 
 .convertJavaDataSetIntoDataFrame <- function(dataSetObject) {
-  refArray <- NULL
-  observations <- J4R::callJavaMethod(dataSetObject, "getObservations")
-  observations <- J4R::getAllValuesFromListObject(observations)
-  for (obs in observations) {
-    array <- J4R::callJavaMethod(obs, "toArray")
-    array <- as.list(J4R::getAllValuesFromArray(array))
-    if (is.null(refArray)) {
-      refArray <- array
+  dataFrameObj <- NULL
+  fieldNames <- J4R::getAllValuesFromListObject(dataSetObject$getFieldNames())
+  for (i in 0:(length(fieldNames) - 1)) {
+    if (is.null(dataFrameObj)) {
+      dataFrameObj <- data.frame(J4R::getAllValuesFromListObject(dataSetObject$getFieldValues(i)))
     } else {
-      refArray <- .addToArray(refArray, array)
+      dataFrameObj <- cbind(dataFrameObj, J4R::getAllValuesFromListObject(dataSetObject$getFieldValues(i)))
     }
   }
-  dataFrame <- NULL
-  for (i in 1:length(refArray)) {
-    dataFrame <- as.data.frame(cbind(dataFrame, refArray[[i]]))
-  }
-  colnames(dataFrame) <- J4R::getAllValuesFromListObject(J4R::callJavaMethod(dataSetObject, "getFieldNames"))
-  return(dataFrame)
+  colnames(dataFrameObj) <- fieldNames
+  return(dataFrameObj)
 }
 
 
-#' @export
-connectToJava <- function() {
+.isAlreadyLoaded <- function() {
   if (J4R::isConnectedToJava()) {
-    if (!J4R::checkIfClasspathContains(repiceaFilename)) {
+    if (J4R::checkIfClasspathContains(repiceaFilename)) {
+      return(TRUE)
+    } else {
       stop("The package is connect to Java but the required Java library is not part of the classpath! Please shutDownJava() first!")
     }
   } else {
-    repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
-    J4R::connectToJava(extensionPath = repiceaPath)
+    return(FALSE)
   }
 }
 
-#' @export
-SIMEXGLM <- function(formula, linkFunction=c("logit", "CLogLog"), data, fieldWithMeasError, varianceFieldName) {
-  message("SIMEX: Converting data.frame instance to Java object...")
+
+.connectToJava <- function() {
+  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
+  J4R::connectToJava(extensionPath = repiceaPath)
+}
+
+
+#' Create a Data Structure for the SIMEX Method
+#'
+#' Create a data structure on the Java end that will be later used with
+#' the SIMEX method.
+#'
+#' @param formula a formula (e.g. "y ~ x")
+#' @param data a data.frame object
+#' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
+#'
+.SIMEXDataSet <- function(formula, data, varianceFieldName) {
   formattedString <- J4R::callJavaMethod(formula, "replace", "\n", "")
   formattedString <- J4R::callJavaMethod(formattedString, "replace", " ", "")
   firstSplit <- J4R::getAllValuesFromListObject(J4R::callJavaMethod("repicea.util.ObjectUtility", "decomposeUsingToken", formattedString, "~"))
@@ -101,26 +122,64 @@ SIMEXGLM <- function(formula, linkFunction=c("logit", "CLogLog"), data, fieldWit
   myDataSet <- J4R::createJavaObject("repicea.stats.data.DataSet")
   for (f in c(fieldNames, varianceFieldName)) {
     myObjectArray <- J4R::createJavaObject("java.lang.Object", length(data.tmp[,1]), isArray = TRUE)
-    J4R::setValueInArray(myObjectArray, data.tmp[, f])
-    myDataSet$addField(f, myObjectArray)
+    if (f %in% colnames(data.tmp)) {
+      J4R::setValueInArray(myObjectArray, data.tmp[, f])
+      myDataSet$addField(f, myObjectArray)
+    }
   }
-  message("SIMEX: Done.")
+  return(myDataSet)
+}
+
+#'
+#' Correct for the Measurement using the SIMEX Method
+#'
+#' First, create a data structure on the Java end that will be later used with
+#' the SIMEX method. Secondly, fit a naive model. Thirdly, implements the SIMEX
+#' method.
+#'
+#' @param formula a formula (e.g. "y ~ x")
+#' @param linkFunction the link function (either "logit" or "CLogLog")
+#' @param data a data.frame object
+#' @param fieldWithMeasError the field with measurement error in the data argument
+#' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
+#'
+#' @return an instance of the S3 SIMEXResult class
+#'
+#' @export
+SIMEXGLM <- function(formula, linkFunction=c("logit", "CLogLog"), data, fieldWithMeasError, varianceFieldName) {
+  if (!.isAlreadyLoaded()) {
+    .connectToJava()
+  }
+  message("SIMEX: Converting data.frame instance to Java object...")
+  simexDataSet <- .SIMEXDataSet(formula, data, varianceFieldName)
   linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
   message("SIMEX: Fitting preliminary model (without considering measurement errors)...")
   genLinMod <- J4R::createJavaObject("repicea.stats.model.glm.GeneralizedLinearModel",
-                                     myDataSet,
+                                     simexDataSet,
                                      linkFunctionType,
                                      formula)
   genLinMod$doEstimation()
-  message("SIMEX: Done.")
   message("SIMEX: Running SIMEX procedure. This may take a while...")
   simexMod <- J4R::createJavaObject("repicea.stats.model.glm.measerr.SIMEXModel", genLinMod, fieldWithMeasError, varianceFieldName)
   simexMod$doEstimation()
-  message("SIMEX: Done.")
-  return(simexMod)
+  simexResult <- new_SIMEXResult(genLinMod, simexMod)
+  return(simexResult)
 }
 
-
+.convertJavaMatrixToR <- function(jObject) {
+  jMatrixClass <- J4R::callJavaMethod("java.lang.Class", "forName", "repicea.math.Matrix")
+  cl <- jObject$getClass()
+  if (!jMatrixClass$isAssignableFrom(cl)) {
+    stop("The jObject argument should be a jObject pointing to a repicea.math.Matrix instance")
+  }
+  m = matrix(nrow = jObject$m_iRows, ncol = jObject$m_iCols)
+  i <- as.integer(0)
+  for (i in 0:(jObject$m_iCols - 1)) {
+    index <- 0:(jObject$m_iRows - 1)
+    m[index+1, i + 1] <- jObject$getValueAt(index , i)
+  }
+  return(m)
+}
 
 
 

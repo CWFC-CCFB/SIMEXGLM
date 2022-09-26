@@ -9,11 +9,13 @@ Description: Implement the SIMEX procedure for logistic models with measurement
 URL: https://github.com/CWFC-CCFB/SIMEXGLM
 Depends: R (>= 4.2.1)
 Imports: 
-    J4R (>= 1.1.7)
+    J4R (>= 1.1.7),
+    ggplot2 (>= 3.3.6)
 License: LGPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1
 SystemRequirements: Java 8
 Suggests: 
-    testthat
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

@@ -9,7 +9,9 @@ SIMEXGLM(
   linkFunction = c("logit", "CLogLog"),
   data,
   fieldWithMeasError,
-  varianceFieldName
+  varianceFieldName,
+  nbBootstrapRealizations = 100,
+  nbThreads = 2
 )
 }
 \arguments{
@@ -22,6 +24,11 @@ SIMEXGLM(
 \item{fieldWithMeasError}{the field with measurement error in the data argument}
 
 \item{varianceFieldName}{the field that contains the variance of the measurement error in the data argument}
+
+\item{nbBootstrapRealizations}{the number of bootstrap realizations for each level of inflated variance (is
+set to 100 by default )}
+
+\item{nbThreads}{the number of threads to process the bootstrap realizations (is set to 2 by default)}
 }
 \value{
 an instance of the S3 SIMEXResult class

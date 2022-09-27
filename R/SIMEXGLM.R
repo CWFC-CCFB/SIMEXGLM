@@ -92,7 +92,8 @@ shutdownClient <- function() {
 
 
 .connectToJava <- function() {
-  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
+  repiceaPath <- normalizePath(system.file(repiceaFilename, package="SIMEXGLM"))
+#  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
   J4R::connectToJava(extensionPath = repiceaPath)
 }
 
@@ -142,11 +143,20 @@ shutdownClient <- function() {
 #' @param data a data.frame object
 #' @param fieldWithMeasError the field with measurement error in the data argument
 #' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
+#' @param nbBootstrapRealizations the number of bootstrap realizations for each level of inflated variance (is
+#' set to 100 by default )
+#' @param nbThreads the number of threads to process the bootstrap realizations (is set to 2 by default)
 #'
 #' @return an instance of the S3 SIMEXResult class
 #'
 #' @export
-SIMEXGLM <- function(formula, linkFunction=c("logit", "CLogLog"), data, fieldWithMeasError, varianceFieldName) {
+SIMEXGLM <- function(formula,
+                     linkFunction=c("logit", "CLogLog"),
+                     data,
+                     fieldWithMeasError,
+                     varianceFieldName,
+                     nbBootstrapRealizations = 100,
+                     nbThreads = 2) {
   if (!.isAlreadyLoaded()) {
     .connectToJava()
   }
@@ -161,6 +171,8 @@ SIMEXGLM <- function(formula, linkFunction=c("logit", "CLogLog"), data, fieldWit
   genLinMod$doEstimation()
   message("SIMEX: Running SIMEX procedure. This may take a while...")
   simexMod <- J4R::createJavaObject("repicea.stats.model.glm.measerr.SIMEXModel", genLinMod, fieldWithMeasError, varianceFieldName)
+  simexMod$setNumberOfBootstrapRealizations(as.integer(nbBootstrapRealizations))
+  simexMod$setNbThreads(as.integer(nbThreads))
   simexMod$doEstimation()
   simexResult <- new_SIMEXResult(genLinMod, simexMod)
   return(simexResult)

@@ -76,8 +76,10 @@ new_SIMEXResult <- function(glmJavaObject, simexJavaObject) {
                     ggplot2::geom_line(ggplot2::aes(x=zeta, y=pred), pred_i, size = 1)
                   if (decorated) {
                     plot <- ggplot2::ggplot() +
-                      ggplot2::geom_point(ggplot2::aes(x=zeta, y=obs), obs_i, size = 2) +
-                      ggplot2::geom_line(ggplot2::aes(x=zeta, y=pred), pred_i, size = 1) +
+                      ggplot2::geom_point(ggplot2::aes(x=zeta, y=obs), obs_i, size = 3) +
+                      ggplot2::geom_point(ggplot2::aes(x=zeta, y=pred), pred_i[which(pred_i$zeta == -1),], shape = 17, fill="black", size = 3) +
+                      ggplot2::geom_line(ggplot2::aes(x=zeta, y=pred), pred_i[which(pred_i$zeta >= 0),], size = 1) +
+                      ggplot2::geom_line(ggplot2::aes(x=zeta, y=pred), pred_i[which(pred_i$zeta < 0),], lty = "dashed", size = 1) +
                       ggplot2::xlab("Variance inflation") +
                       ggplot2::ylab(parmName) +
                       ggplot2::theme(text = ggplot2::element_text(size=18),

@@ -5,7 +5,7 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.6.3.jar"
+repiceaFilename <- "repicea-1.6.4.jar"
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")

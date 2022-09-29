@@ -4,6 +4,7 @@
 
 
 rm(list = ls())
+require(SIMEXGLM)
 
 data("simexExample")
 
@@ -19,6 +20,7 @@ shutdownClient()
 #summary(mySIMEX)
 #plot(mySIMEX)
 coefficients <- coef(mySIMEX)
+#mySIMEX$getEffectNames()
 
 test_that("Checking parameter estimate values", {
   expect_true(abs(coefficients[1] - -0.1584360) < 1E-2)
@@ -31,5 +33,13 @@ test_that("Checking parameter estimate values", {
   expect_true(abs(vcovMat[1,1] - 0.0046055043) < 1E-4)
   expect_true(abs(vcovMat[2,1] - -2.266612e-04) < 1E-5)
   expect_true(abs(vcovMat[2,2] - 1.976268e-05) < 1E-6)
+})
+
+predictions <- fitted(mySIMEX)
+
+test_that("Checking parameter estimate values", {
+  expect_true(abs(predictions[1] - 0.053331652) < 3E-3)
+  expect_true(abs(predictions[2] - 0.436177757) < 3E-3)
+  expect_true(abs(predictions[3] - 0.003563088) < 1E-3)
 })
 

@@ -5,7 +5,7 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.6.4.jar"
+repiceaFilename <- "repicea-1.6.5.jar"
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")
@@ -190,13 +190,18 @@ SIMEXGLM <- function(formula,
   if (!jMatrixClass$isAssignableFrom(cl)) {
     stop("The jObject argument should be a jObject pointing to a repicea.math.Matrix instance")
   }
-  m = matrix(nrow = jObject$m_iRows, ncol = jObject$m_iCols)
-  i <- as.integer(0)
+  nrows <- jObject$m_iRows
+  ncols <- jObject$m_iCols
+  m <- matrix(nrow = nrows, ncol = ncols)
   for (i in 0:(jObject$m_iCols - 1)) {
     index <- 0:(jObject$m_iRows - 1)
-    m[index+1, i + 1] <- jObject$getValueAt(index , i)
+    m[index + 1, i + 1] <- jObject$getValueAt(index , i)
   }
-  return(m)
+  if (nrows == 1 || ncols == 1) {
+    return(as.vector(m))
+  } else {
+    return(m)
+  }
 }
 
 

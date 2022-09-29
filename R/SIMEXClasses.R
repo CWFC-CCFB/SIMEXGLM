@@ -29,15 +29,30 @@ plot.SIMEXResult <- function(object) {
 #'
 #' @param obj an instance of the S3 class SIMEXResult
 #'
+#' @return a named vector
+#'
 #' @export
 coef.SIMEXResult <- function(object) {
   return(object$coef)
 }
 
 #'
+#' Provide the Predictions Based on the SIMEX Parameter Estimates
+#'
+#' @return a vector
+#'
+#' @export
+fitted.SIMEXResult <- function(object) {
+  return(object$fitted)
+}
+
+
+#'
 #' Provide the Estimated Variance-Covaraince of the Model Coefficients
 #'
 #' @param obj an instance of the S3 class SIMEXResult
+#'
+#' @return a matrix
 #'
 #' @export
 vcov.SIMEXResult <- function(object) {
@@ -66,13 +81,19 @@ new_SIMEXResult <- function(glmJavaObject,
 
   me$summary <- paste0(glmJavaObject$getSummary(), simexJavaObject$getSummary())
   me$coef <- .convertJavaMatrixToR(simexJavaObject$getParameters())
+  names(me$coef) <- unique(me$obsParmEst$parmID)
   me$vcov <- .convertJavaMatrixToR(simexJavaObject$getEstimator()$getParameterEstimates()$getVariance())
+  row.names(me$vcov) <- unique(me$obsParmEst$parmID)
+  colnames(me$vcov) <- unique(me$obsParmEst$parmID)
+
+  predicted <- simexJavaObject$getPredicted()
+  range <- 0:(predicted$m_iRows-1)
+  me$fitted <- predicted$getValueAt(range, as.integer(0))
 
   delayedAssign("getEffectNames",
                 #### getModelDataFields ####
                 function() {
-                  obs <- me$obsParmEst
-                  return(unique(obs$parmID))
+                  return(names(me$coef))
                 },
                 assign.env = me)
 

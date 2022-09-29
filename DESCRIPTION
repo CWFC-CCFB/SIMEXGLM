@@ -1,7 +1,7 @@
 Package: SIMEXGLM
 Type: Package
 Title: SIMEX Procedure for Logistic Regression with Measurement Errors
-Version: 1.0.2
+Version: 1.0.3
 Author: Mathieu Fortin
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Description: Implement the SIMEX procedure for logistic models with measurement

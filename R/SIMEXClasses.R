@@ -9,8 +9,7 @@
 #'
 #' @export
 summary.SIMEXResult <- function(object) {
-  cat(object$.glm$getSummary())
-  cat(object$.simex$getSummary())
+  cat(object$summary)
 }
 
 #'
@@ -32,7 +31,7 @@ plot.SIMEXResult <- function(object) {
 #'
 #' @export
 coef.SIMEXResult <- function(object) {
-  return(.convertJavaMatrixToR(object$.simex$getParameters()))
+  return(object$coef)
 }
 
 #'
@@ -42,18 +41,32 @@ coef.SIMEXResult <- function(object) {
 #'
 #' @export
 vcov.SIMEXResult <- function(object) {
-  return(.convertJavaMatrixToR(object$.simex$getEstimator()$getParameterEstimates()$getVariance()))
+  return(object$vcov)
 }
 
-
-new_SIMEXResult <- function(glmJavaObject, simexJavaObject) {
+new_SIMEXResult <- function(glmJavaObject,
+                            simexJavaObject,
+                            formula,
+                            linkFunction,
+                            fieldWithMeasError,
+                            varianceFieldName,
+                            nbBootstrapRealizations) {
   me <- new.env(parent = emptyenv())
   class(me) <- c("SIMEXResult")
-  me$.glm <- glmJavaObject
-  me$.simex <- simexJavaObject
+#  me$.glm <- glmJavaObject
 
-  me$obsParmEst <-  .convertJavaDataSetIntoDataFrame(me$.simex$getObservedParameterEstimates())
-  me$predParmEst <- .convertJavaDataSetIntoDataFrame(me$.simex$getPredictedParameterEstimates())
+  me$formula <- formula
+  me$linkFunction <- linkFunction
+  me$fieldWithMeasError <- fieldWithMeasError
+  me$varianceFieldName <- varianceFieldName
+  me$nbBootstrapRealizations <- nbBootstrapRealizations
+
+  me$obsParmEst <-  .convertJavaDataSetIntoDataFrame(simexJavaObject$getObservedParameterEstimates())
+  me$predParmEst <- .convertJavaDataSetIntoDataFrame(simexJavaObject$getPredictedParameterEstimates())
+
+  me$summary <- paste0(glmJavaObject$getSummary(), simexJavaObject$getSummary())
+  me$coef <- .convertJavaMatrixToR(simexJavaObject$getParameters())
+  me$vcov <- .convertJavaMatrixToR(simexJavaObject$getEstimator()$getParameterEstimates()$getVariance())
 
   delayedAssign("getEffectNames",
                 #### getModelDataFields ####

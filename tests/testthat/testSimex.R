@@ -14,6 +14,8 @@ mySIMEX <- SIMEXGLM("y ~ distanceToConspecific", # the formula
                     "variance",
                     nbThreads = 3) # variance of the measurement error
 
+shutdownClient()
+
 #summary(mySIMEX)
 #plot(mySIMEX)
 coefficients <- coef(mySIMEX)
@@ -31,4 +33,3 @@ test_that("Checking parameter estimate values", {
   expect_true(abs(vcovMat[2,2] - 1.976268e-05) < 1E-6)
 })
 
-shutdownClient()

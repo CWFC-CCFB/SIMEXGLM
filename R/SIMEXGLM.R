@@ -174,7 +174,13 @@ SIMEXGLM <- function(formula,
   simexMod$setNumberOfBootstrapRealizations(as.integer(nbBootstrapRealizations))
   simexMod$setNbThreads(as.integer(nbThreads))
   simexMod$doEstimation()
-  simexResult <- new_SIMEXResult(genLinMod, simexMod)
+  simexResult <- new_SIMEXResult(genLinMod,
+                                 simexMod,
+                                 formula,
+                                 linkFunction,
+                                 fieldWithMeasError,
+                                 varianceFieldName,
+                                 simexMod$getNumberOfBootstrapRealizations())
   return(simexResult)
 }
 

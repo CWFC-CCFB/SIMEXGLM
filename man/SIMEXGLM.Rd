@@ -10,8 +10,10 @@ SIMEXGLM(
   data,
   fieldWithMeasError,
   varianceFieldName,
+  factors = seq(0, 2, by = 0.2),
   nbBootstrapRealizations = 100,
-  nbThreads = 2
+  nbThreads = 2,
+  debug = F
 )
 }
 \arguments{
@@ -25,10 +27,14 @@ SIMEXGLM(
 
 \item{varianceFieldName}{the field that contains the variance of the measurement error in the data argument}
 
+\item{factors}{a sequence of inflation factors (from 0 to 2 by .2 by default)}
+
 \item{nbBootstrapRealizations}{the number of bootstrap realizations for each level of inflated variance (is
 set to 100 by default )}
 
 \item{nbThreads}{the number of threads to process the bootstrap realizations (is set to 2 by default)}
+
+\item{debug}{a logical to enable the debug mode}
 }
 \value{
 an instance of the S3 SIMEXResult class

@@ -91,10 +91,14 @@ shutdownClient <- function() {
 }
 
 
-.connectToJava <- function() {
-  repiceaPath <- normalizePath(system.file(repiceaFilename, package="SIMEXGLM"))
-#  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
-  J4R::connectToJava(extensionPath = repiceaPath)
+.connectToJava <- function(debug = F) {
+  if (debug) {
+    J4R::connectToJava(port = 18011:18012, internalPort = 50000:50001, public=T, key=1000000)
+  } else {
+    repiceaPath <- normalizePath(system.file(repiceaFilename, package="SIMEXGLM"))
+    #  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
+    J4R::connectToJava(extensionPath = repiceaPath)
+  }
 }
 
 
@@ -143,9 +147,11 @@ shutdownClient <- function() {
 #' @param data a data.frame object
 #' @param fieldWithMeasError the field with measurement error in the data argument
 #' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
+#' @param factors a sequence of inflation factors (from 0 to 2 by .2 by default)
 #' @param nbBootstrapRealizations the number of bootstrap realizations for each level of inflated variance (is
 #' set to 100 by default )
 #' @param nbThreads the number of threads to process the bootstrap realizations (is set to 2 by default)
+#' @param debug a logical to enable the debug mode
 #'
 #' @return an instance of the S3 SIMEXResult class
 #'
@@ -155,10 +161,17 @@ SIMEXGLM <- function(formula,
                      data,
                      fieldWithMeasError,
                      varianceFieldName,
+                     factors = seq(0, 2, by=.2),
                      nbBootstrapRealizations = 100,
-                     nbThreads = 2) {
-  if (!.isAlreadyLoaded()) {
-    .connectToJava()
+                     nbThreads = 2,
+                     debug = F) {
+  if (debug) {
+    if (!J4R::isConnectedToJava()) {
+      message("SIMEX: Connecting to Java in debug mode")
+      .connectToJava(debug)
+    }
+  } else if (!.isAlreadyLoaded()) {
+    .connectToJava(debug)
   }
   message("SIMEX: Converting data.frame instance to Java object...")
   simexDataSet <- .SIMEXDataSet(formula, data, varianceFieldName)
@@ -173,6 +186,7 @@ SIMEXGLM <- function(formula,
   simexMod <- J4R::createJavaObject("repicea.stats.model.glm.measerr.SIMEXModel", genLinMod, fieldWithMeasError, varianceFieldName)
   simexMod$setNumberOfBootstrapRealizations(as.integer(nbBootstrapRealizations))
   simexMod$setNbThreads(as.integer(nbThreads))
+  simexMod$setFactors(J4R::as.JavaArray(factors))
   simexMod$doEstimation()
   simexResult <- new_SIMEXResult(genLinMod,
                                  simexMod,

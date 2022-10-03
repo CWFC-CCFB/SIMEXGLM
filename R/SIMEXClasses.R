@@ -12,6 +12,39 @@ summary.SIMEXResult <- function(object) {
   cat(object$summary)
 }
 
+
+#'
+#' Make Predictions Based on the SIMEX Parameter Estimate
+#'
+#' @param object a SIMEXResult instance
+#' @param newdata a data.frame with new data
+#' @param originalFormula a string representing the original formula
+#'
+#' @return a data.frame containing the predictions and their 0.95 confidence intervals
+#' @export
+predict.SIMEXResult <- function(object, newdata, originalFormula = object$formula) {
+  matX <- model.matrix(as.formula(originalFormula), newdata)
+  xBeta <- matX %*% object$coef
+  var <- sapply(1:length(matX[,1]), function(i) {
+    matX[i,] %*% object$vcov %*% matX[i,]
+  })
+  lower95 <- xBeta - qnorm(0.975) * var^.5
+  upper95 <- xBeta + qnorm(0.975) * var^.5
+  if (object$linkFunction == "CLogLog") {
+    meanPred <- 1-exp(-exp(xBeta))
+    lower95Pred <- 1-exp(-exp(lower95))
+    upper95Pred <- 1-exp(-exp(upper95))
+  } else if (object$linkFunction == "logit") {
+    meanPred <- exp(xBeta) / (1 + exp(xBeta))
+    lower95Pred <- exp(lower95) / (1 + exp(lower95))
+    upper95Pred <- exp(upper95) / (1 + exp(upper95))
+  } else {
+    stop(paste("This link function", object$linkFunction, "is not supported!"))
+  }
+  return(data.frame(meanPred, lower95Pred, upper95Pred))
+}
+
+
 #'
 #' Plot the Observed and Predicted Parameter Estimates
 #'

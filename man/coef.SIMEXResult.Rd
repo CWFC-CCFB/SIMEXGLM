@@ -9,6 +9,9 @@
 \arguments{
 \item{obj}{an instance of the S3 class SIMEXResult}
 }
+\value{
+a named vector
+}
 \description{
 Provide the Coefficient (Parameter Estimates) of the Model
 }

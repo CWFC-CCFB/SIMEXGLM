@@ -9,6 +9,9 @@
 \arguments{
 \item{obj}{an instance of the S3 class SIMEXResult}
 }
+\value{
+a matrix
+}
 \description{
 Provide the Estimated Variance-Covaraince of the Model Coefficients
 }

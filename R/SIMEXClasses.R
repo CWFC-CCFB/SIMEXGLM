@@ -13,6 +13,37 @@ summary.SIMEXResult <- function(object) {
 }
 
 
+
+.convertToMatrix <- function(formula, newdata, includeIntercept = T) {
+  effects <- strsplit(formula, "~")[[1]][2]
+  effects <- gsub("\n", "", effects)
+  effects <- gsub(" ", "", effects)
+  individualEffects <- strsplit(effects, "+", fixed = T)[[1]]
+  matX <- NULL
+  eff <- individualEffects[3]
+  for (eff in individualEffects) {
+    variables <- strsplit(eff, ":")[[1]]
+    vector <- NULL
+    for (v in variables) {
+      if (is.null(vector)) {
+        vector <- newdata[,v]
+      } else {
+        vector <- vector * newdata[,v]
+      }
+    }
+    if (is.null(matX)) {
+      matX <- as.matrix(vector)
+    } else {
+      matX <- cbind(matX, vector)
+    }
+  }
+  if (includeIntercept) {
+    matX <- cbind(rep(1, nrow(matX)), matX)
+  }
+  return(matX)
+}
+
+
 #'
 #' Make Predictions Based on the SIMEX Parameter Estimate
 #'
@@ -23,7 +54,7 @@ summary.SIMEXResult <- function(object) {
 #' @return a data.frame containing the predictions and their 0.95 confidence intervals
 #' @export
 predict.SIMEXResult <- function(object, newdata, originalFormula = object$formula) {
-  matX <- model.matrix(as.formula(originalFormula), newdata)
+  matX <- .convertToMatrix(originalFormula, newdata)
   xBeta <- matX %*% object$coef
   var <- sapply(1:length(matX[,1]), function(i) {
     matX[i,] %*% object$vcov %*% matX[i,]

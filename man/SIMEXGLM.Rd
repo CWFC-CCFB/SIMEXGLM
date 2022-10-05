@@ -2,7 +2,7 @@
 % Please edit documentation in R/SIMEXGLM.R
 \name{SIMEXGLM}
 \alias{SIMEXGLM}
-\title{Correct for the Measurement using the SIMEX Method}
+\title{Correct Inference for Measurement Errors using the SIMEX Method}
 \usage{
 SIMEXGLM(
   formula,

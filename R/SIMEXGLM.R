@@ -5,7 +5,7 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.6.5.jar"
+repiceaFilename <- "repicea-1.6.6.jar"
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")
@@ -136,7 +136,7 @@ shutdownClient <- function() {
 }
 
 #'
-#' Correct for the Measurement using the SIMEX Method
+#' Correct Inference for Measurement Errors using the SIMEX Method
 #'
 #' First, create a data structure on the Java end that will be later used with
 #' the SIMEX method. Secondly, fit a naive model. Thirdly, implements the SIMEX

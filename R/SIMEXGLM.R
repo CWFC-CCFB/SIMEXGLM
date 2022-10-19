@@ -5,11 +5,12 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.6.6.jar"
+repiceaFilename <- "repicea-1.7.0.jar"
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")
-  packageStartupMessage("The SIMEXGLM package implements the SIMEX procedure for logistic models!")
+  packageStartupMessage("The SIMEXGLM package implements the SIMEX procedure for logistic and")
+  packageStartupMessage("negative binomial models.")
   packageStartupMessage("Please, make sure that Java (version 8 or later) is installed on your computer.")
   packageStartupMessage("For more information, visit https://github.com/CWFC-CCFB/SIMEXGLM .")
 }
@@ -30,6 +31,7 @@ repiceaFilename <- "repicea-1.6.6.jar"
 
 #'
 #' A fake data.frame object for an example of the SIMEX method
+#' with logistic regression.
 #'
 #' @docType data
 #'
@@ -40,6 +42,20 @@ repiceaFilename <- "repicea-1.6.6.jar"
 #' @examples
 #' data(simexExample)
 "simexExample"
+
+#'
+#' A fake data.frame object for an example of the SIMEX method
+#' with negative binomial regression.
+#'
+#' @docType data
+#'
+#' @usage data(simexExampleNegBinomial)
+#'
+#' @keywords datasets
+#'
+#' @examples
+#' data(simexExampleNegBinomial)
+"simexExampleNegBinomial"
 
 
 #'
@@ -136,14 +152,16 @@ shutdownClient <- function() {
 }
 
 #'
-#' Correct Inference for Measurement Errors using the SIMEX Method
+#' Correct Inference for Logistic Models with Measurement Errors using the SIMEX Method
 #'
-#' First, create a data structure on the Java end that will be later used with
-#' the SIMEX method. Secondly, fit a naive model. Thirdly, implements the SIMEX
-#' method.
+#' First, it create a data structure on the Java end that will be later used with
+#' the SIMEX method. Secondly, it fits a naive model. Thirdly, it implements the
+#' SIMEX method.
 #'
 #' @param formula a formula (e.g. "y ~ x")
-#' @param linkFunction the link function (either "logit" or "CLogLog")
+#' @param dist the distribution of the reponse variable (either "Bernoulli" or "NegativeBinomial")
+#' @param linkFunction the link function (either "Logit" or "CLogLog" for the Bernoulli distribution
+#' or "Log" for the negative binomial)
 #' @param data a data.frame object
 #' @param fieldWithMeasError the field with measurement error in the data argument
 #' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
@@ -157,7 +175,8 @@ shutdownClient <- function() {
 #'
 #' @export
 SIMEXGLM <- function(formula,
-                     linkFunction=c("logit", "CLogLog"),
+                     dist = c("Bernoulli", "NegativeBinomial"),
+                     linkFunction = c("Logit", "CLogLog","Log"),
                      data,
                      fieldWithMeasError,
                      varianceFieldName,
@@ -177,8 +196,10 @@ SIMEXGLM <- function(formula,
   simexDataSet <- .SIMEXDataSet(formula, data, varianceFieldName)
   linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
   message("SIMEX: Fitting preliminary model (without considering measurement errors)...")
+  distribution <- J4R::createJavaObject("repicea.stats.model.glm.Family$GLMDistribution", dist)
   genLinMod <- J4R::createJavaObject("repicea.stats.model.glm.GeneralizedLinearModel",
                                      simexDataSet,
+                                     distribution,
                                      linkFunctionType,
                                      formula)
   genLinMod$doEstimation()
@@ -191,12 +212,14 @@ SIMEXGLM <- function(formula,
   simexResult <- new_SIMEXResult(genLinMod,
                                  simexMod,
                                  formula,
+                                 dist,
                                  linkFunction,
                                  fieldWithMeasError,
                                  varianceFieldName,
                                  simexMod$getNumberOfBootstrapRealizations())
   return(simexResult)
 }
+
 
 .convertJavaMatrixToR <- function(jObject) {
   jMatrixClass <- J4R::callJavaMethod("java.lang.Class", "forName", "repicea.math.Matrix")

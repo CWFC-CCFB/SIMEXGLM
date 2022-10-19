@@ -55,9 +55,14 @@ summary.SIMEXResult <- function(object) {
 #' @export
 predict.SIMEXResult <- function(object, newdata, originalFormula = object$formula) {
   matX <- .convertToMatrix(originalFormula, newdata)
-  xBeta <- matX %*% object$coef
+  len <- length(matX[1,])
+  coef <- object$coef
+  coef <- coef[1:len]
+  vcov <- object$vcov
+  vcov <- vcov[1:len, 1:len]
+  xBeta <- matX %*% coef[1:length(matX[1,])]
   var <- sapply(1:length(matX[,1]), function(i) {
-    matX[i,] %*% object$vcov %*% matX[i,]
+    matX[i,] %*% vcov %*% matX[i,]
   })
   lower95 <- xBeta - qnorm(0.975) * var^.5
   upper95 <- xBeta + qnorm(0.975) * var^.5
@@ -65,10 +70,14 @@ predict.SIMEXResult <- function(object, newdata, originalFormula = object$formul
     meanPred <- 1-exp(-exp(xBeta))
     lower95Pred <- 1-exp(-exp(lower95))
     upper95Pred <- 1-exp(-exp(upper95))
-  } else if (object$linkFunction == "logit") {
+  } else if (object$linkFunction == "Logit") {
     meanPred <- exp(xBeta) / (1 + exp(xBeta))
     lower95Pred <- exp(lower95) / (1 + exp(lower95))
     upper95Pred <- exp(upper95) / (1 + exp(upper95))
+  } else if (object$linkFunction == "Log") {
+    meanPred <- exp(xBeta)
+    lower95Pred <- exp(lower95)
+    upper95Pred <- exp(upper95)
   } else {
     stop(paste("This link function", object$linkFunction, "is not supported!"))
   }
@@ -126,6 +135,7 @@ vcov.SIMEXResult <- function(object) {
 new_SIMEXResult <- function(glmJavaObject,
                             simexJavaObject,
                             formula,
+                            distribution,
                             linkFunction,
                             fieldWithMeasError,
                             varianceFieldName,
@@ -135,6 +145,7 @@ new_SIMEXResult <- function(glmJavaObject,
 #  me$.glm <- glmJavaObject
 
   me$formula <- formula
+  me$distribution <- distribution
   me$linkFunction <- linkFunction
   me$fieldWithMeasError <- fieldWithMeasError
   me$varianceFieldName <- varianceFieldName

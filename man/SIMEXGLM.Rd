@@ -2,11 +2,12 @@
 % Please edit documentation in R/SIMEXGLM.R
 \name{SIMEXGLM}
 \alias{SIMEXGLM}
-\title{Correct Inference for Measurement Errors using the SIMEX Method}
+\title{Correct Inference for Logistic Models with Measurement Errors using the SIMEX Method}
 \usage{
 SIMEXGLM(
   formula,
-  linkFunction = c("logit", "CLogLog"),
+  dist = c("Bernoulli", "NegativeBinomial"),
+  linkFunction = c("Logit", "CLogLog", "Log"),
   data,
   fieldWithMeasError,
   varianceFieldName,
@@ -19,7 +20,10 @@ SIMEXGLM(
 \arguments{
 \item{formula}{a formula (e.g. "y ~ x")}
 
-\item{linkFunction}{the link function (either "logit" or "CLogLog")}
+\item{dist}{the distribution of the reponse variable (either "Bernoulli" or "NegativeBinomial")}
+
+\item{linkFunction}{the link function (either "Logit" or "CLogLog" for the Bernoulli distribution
+or "Log" for the negative binomial)}
 
 \item{data}{a data.frame object}
 
@@ -40,7 +44,7 @@ set to 100 by default )}
 an instance of the S3 SIMEXResult class
 }
 \description{
-First, create a data structure on the Java end that will be later used with
-the SIMEX method. Secondly, fit a naive model. Thirdly, implements the SIMEX
-method.
+First, it create a data structure on the Java end that will be later used with
+the SIMEX method. Secondly, it fits a naive model. Thirdly, it implements the
+SIMEX method.
 }

@@ -2,7 +2,8 @@
 % Please edit documentation in R/SIMEXGLM.R
 \name{SIMEXGLM}
 \alias{SIMEXGLM}
-\title{Correct Inference for Logistic Models with Measurement Errors using the SIMEX Method}
+\title{Correct Inference for Generalized Linear Models with Measurement Errors
+using the SIMEX Method}
 \usage{
 SIMEXGLM(
   formula,

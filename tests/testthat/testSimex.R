@@ -55,14 +55,17 @@ test_that("Checking predictions", {
 rm(list=ls())
 data("simexExampleNegBinomial")
 
+o <- SIMEXGLM::createDataSet("y ~ TotalPrcp + G_F + G_R + occIndex10km + timeSince1970", simexExampleNegBinomial, "occIndex10kmVar")
+
+elapTime <- system.time({
 mySIMEX <- SIMEXGLM("y ~ TotalPrcp + G_F + G_R + occIndex10km + timeSince1970", # the formula
                     "NegativeBinomial", # the distribution
                     "Log", # the link function
-                    simexExampleNegBinomial, # the data
+                    o, # the data
                     "occIndex10km", # variable with measurement error
                     "occIndex10kmVar",
                     nbThreads = 3) # variance of the measurement error
-
+})[3]
 shutdownClient()
 
 
@@ -93,3 +96,15 @@ newPredictions <- predict(mySIMEX, simexExampleNegBinomial)
 test_that("Checking predictions", {
   expect_true(  all(abs(newPredictions$meanPred - predictions) < 1E-8 ))
 })
+
+require(MASS)
+elapTimeMass <- system.time({
+  for (i in 1:1001) {
+    glm.nb("y ~ TotalPrcp + G_F + G_R + occIndex10km + timeSince1970", simexExampleNegBinomial)
+  }
+})[3]
+
+test_that("Checking predictions", {
+  expect_true(elapTime < elapTimeMass * .5)
+})
+

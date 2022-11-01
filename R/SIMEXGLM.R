@@ -118,16 +118,18 @@ shutdownClient <- function() {
 }
 
 
-#' Create a Data Structure for the SIMEX Method
+#' Create a Data Structure
 #'
 #' Create a data structure on the Java end that will be later used with
-#' the SIMEX method.
+#' the GLM or SIMEX methods.
 #'
 #' @param formula a formula (e.g. "y ~ x")
 #' @param data a data.frame object
 #' @param varianceFieldName the field that contains the variance of the measurement error in the data argument
 #'
-.SIMEXDataSet <- function(formula, data, varianceFieldName) {
+#' @export
+createDataSet <- function(formula, data, varianceFieldName = NULL) {
+  .connect()
   formattedString <- J4R::callJavaMethod(formula, "replace", "\n", "")
   formattedString <- J4R::callJavaMethod(formattedString, "replace", " ", "")
   firstSplit <- J4R::getAllValuesFromListObject(J4R::callJavaMethod("repicea.util.ObjectUtility", "decomposeUsingToken", formattedString, "~"))
@@ -141,7 +143,13 @@ shutdownClient <- function() {
   }
 
   myDataSet <- J4R::createJavaObject("repicea.stats.data.DataSet")
-  for (f in c(fieldNames, varianceFieldName)) {
+  if (is.null(varianceFieldName)) {
+    completeFieldNames <- fieldNames
+  } else {
+    completeFieldNames <- c(fieldNames, varianceFieldName)
+  }
+
+  for (f in completeFieldNames) {
     myObjectArray <- J4R::createJavaObject("java.lang.Object", length(data.tmp[,1]), isArray = TRUE)
     if (f %in% colnames(data.tmp)) {
       J4R::setValueInArray(myObjectArray, data.tmp[, f])
@@ -151,8 +159,19 @@ shutdownClient <- function() {
   return(myDataSet)
 }
 
+.convertDataIfNeeded <- function(formula, data, varianceFieldName = NULL) {
+  if ("java.object" %in% class(data) && data$.class == "repicea.stats.data.DataSet") {
+    dataSet <- data
+  } else {
+    dataSet <- createDataSet(formula, data, varianceFieldName)
+  }
+  return(dataSet)
+}
+
+
 #'
-#' Correct Inference for Logistic Models with Measurement Errors using the SIMEX Method
+#' Correct Inference for Generalized Linear Models with Measurement Errors
+#' using the SIMEX Method
 #'
 #' First, it create a data structure on the Java end that will be later used with
 #' the SIMEX method. Secondly, it fits a naive model. Thirdly, it implements the
@@ -184,16 +203,9 @@ SIMEXGLM <- function(formula,
                      nbBootstrapRealizations = 100,
                      nbThreads = 2,
                      debug = F) {
-  if (debug) {
-    if (!J4R::isConnectedToJava()) {
-      message("SIMEX: Connecting to Java in debug mode")
-      .connectToJava(debug)
-    }
-  } else if (!.isAlreadyLoaded()) {
-    .connectToJava(debug)
-  }
+  .connect(debug)
   message("SIMEX: Converting data.frame instance to Java object...")
-  simexDataSet <- .SIMEXDataSet(formula, data, varianceFieldName)
+  simexDataSet <- .convertDataIfNeeded(formula, data, varianceFieldName)
   linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
   message("SIMEX: Fitting preliminary model (without considering measurement errors)...")
   distribution <- J4R::createJavaObject("repicea.stats.model.glm.Family$GLMDistribution", dist)
@@ -218,6 +230,52 @@ SIMEXGLM <- function(formula,
                                  varianceFieldName,
                                  simexMod$getNumberOfBootstrapRealizations())
   return(simexResult)
+}
+
+.connect <- function(debug = F) {
+  if (debug) {
+    if (!J4R::isConnectedToJava()) {
+      message("GLM: Connecting to Java in debug mode")
+      .connectToJava(debug)
+    }
+  } else if (!.isAlreadyLoaded()) {
+    .connectToJava(debug)
+  }
+}
+
+#'
+#' Fit Generalized Linear Models
+#'
+#' First, it create a data structure on the Java end. Then,
+#' it fits a generalized linear model.
+#'
+#' @param formula a formula (e.g. "y ~ x")
+#' @param dist the distribution of the reponse variable (either "Bernoulli" or "NegativeBinomial")
+#' @param linkFunction the link function (either "Logit" or "CLogLog" for the Bernoulli distribution
+#' or "Log" for the negative binomial)
+#' @param data a data.frame object
+#' @param debug a logical to enable the debug mode
+#'
+#' @return a java.object instance
+#'
+GLM <- function(formula,
+                     dist = c("Bernoulli", "NegativeBinomial"),
+                     linkFunction = c("Logit", "CLogLog","Log"),
+                     data,
+                     debug = F) {
+  .connect(debug)
+  message("GLM: Converting data.frame instance to Java object...")
+  glmDataSet <- .convertDataIfNeeded(formula, data, varianceFieldName)
+  linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
+  message("GLM: Fitting model...")
+  distribution <- J4R::createJavaObject("repicea.stats.model.glm.Family$GLMDistribution", dist)
+  genLinMod <- J4R::createJavaObject("repicea.stats.model.glm.GeneralizedLinearModel",
+                                     glmDataSet,
+                                     distribution,
+                                     linkFunctionType,
+                                     formula)
+  genLinMod$doEstimation()
+  return(genLinMod)
 }
 
 

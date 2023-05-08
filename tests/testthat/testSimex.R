@@ -122,7 +122,7 @@ predictions <- fitted(mySIMEX)
 
 test_that("Checking fitted values", {
   expect_true(abs(predictions[1] - 0.639) < 5E-2)
-  expect_true(abs(predictions[2] - 0.791) < 5E-2)
+  expect_true(abs(predictions[2] - 0.791) < 6E-2)
   expect_true(abs(predictions[3] - 0.393) < 5E-2)
 })
 

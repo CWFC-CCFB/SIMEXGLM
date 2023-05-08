@@ -5,10 +5,11 @@
 #'
 #' Provide a Summary Adapted to the SIMEX Method
 #'
-#' @param obj an instance of the S3 class SIMEXResult
+#' @param object an instance of the S3 class SIMEXResult
+#' @param ... absolutely useless, just to keep the signature consistent for inheritance
 #'
 #' @export
-summary.SIMEXResult <- function(object) {
+summary.SIMEXResult <- function(object, ...) {
   cat(object$summary)
 }
 
@@ -64,8 +65,8 @@ predict.SIMEXResult <- function(object, newdata, originalFormula = object$formul
   var <- sapply(1:length(matX[,1]), function(i) {
     matX[i,] %*% vcov %*% matX[i,]
   })
-  lower95 <- xBeta - qnorm(0.975) * var^.5
-  upper95 <- xBeta + qnorm(0.975) * var^.5
+  lower95 <- xBeta - stats::qnorm(0.975) * var^.5
+  upper95 <- xBeta + stats::qnorm(0.975) * var^.5
   if (object$linkFunction == "CLogLog") {
     meanPred <- 1-exp(-exp(xBeta))
     lower95Pred <- 1-exp(-exp(lower95))
@@ -88,20 +89,20 @@ predict.SIMEXResult <- function(object, newdata, originalFormula = object$formul
 #'
 #' Plot the Observed and Predicted Parameter Estimates
 #'
-#' @param obj an instance of the S3 class SIMEXResult
+#' @param x an instance of the S3 class SIMEXResult
+#' @param ... absolutely useless, just to keep the signature consistent for inheritance
 #'
 #' @export
-plot.SIMEXResult <- function(object) {
-  for (name in object$getEffectNames()) {
-    print(object$getPlotForThisParameterEstimate(name, decorated = T))
+plot.SIMEXResult <- function(x, ...) {
+  for (name in x$getEffectNames()) {
+    print(x$getPlotForThisParameterEstimate(name, decorated = T))
   }
 }
 
 #'
 #' Provide the Coefficient (Parameter Estimates) of the Model
 #'
-#' @param obj an instance of the S3 class SIMEXResult
-#'
+#' @param object an instance of the S3 class SIMEXResult
 #' @return a named vector
 #'
 #' @export
@@ -112,6 +113,7 @@ coef.SIMEXResult <- function(object) {
 #'
 #' Provide the Predictions Based on the SIMEX Parameter Estimates
 #'
+#' @param object an instance of the S3 class SIMEXResult
 #' @return a vector
 #'
 #' @export
@@ -123,7 +125,7 @@ fitted.SIMEXResult <- function(object) {
 #'
 #' Provide the Estimated Variance-Covaraince of the Model Coefficients
 #'
-#' @param obj an instance of the S3 class SIMEXResult
+#' @param object an instance of the S3 class SIMEXResult
 #'
 #' @return a matrix
 #'
@@ -175,7 +177,6 @@ new_SIMEXResult <- function(glmJavaObject,
   delayedAssign("getPlotForThisParameterEstimate",
                 #### getModelDataFields ####
                 function(parmName, decorated = F) {
-                  require(ggplot2)
                   obs <- me$obsParmEst
                   obs_i <- obs[which(obs$parmID == parmName),]
                   pred <- me$predParmEst

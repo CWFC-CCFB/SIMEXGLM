@@ -14,8 +14,7 @@ SIMEXGLM(
   varianceFieldName,
   factors = seq(0, 2, by = 0.2),
   nbBootstrapRealizations = 100,
-  nbThreads = 2,
-  debug = F
+  nbThreads = 2
 )
 }
 \arguments{
@@ -38,8 +37,6 @@ or "Log" for the negative binomial)}
 set to 100 by default )}
 
 \item{nbThreads}{the number of threads to process the bootstrap realizations (is set to 2 by default)}
-
-\item{debug}{a logical to enable the debug mode}
 }
 \value{
 an instance of the S3 SIMEXResult class

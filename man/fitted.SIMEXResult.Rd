@@ -6,6 +6,9 @@
 \usage{
 \method{fitted}{SIMEXResult}(object)
 }
+\arguments{
+\item{object}{an instance of the S3 class SIMEXResult}
+}
 \value{
 a vector
 }

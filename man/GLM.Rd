@@ -8,8 +8,7 @@ GLM(
   formula,
   dist = c("Bernoulli", "NegativeBinomial"),
   linkFunction = c("Logit", "CLogLog", "Log"),
-  data,
-  debug = F
+  data
 )
 }
 \arguments{
@@ -21,8 +20,6 @@ GLM(
 or "Log" for the negative binomial)}
 
 \item{data}{a data.frame object}
-
-\item{debug}{a logical to enable the debug mode}
 }
 \value{
 a java.object instance

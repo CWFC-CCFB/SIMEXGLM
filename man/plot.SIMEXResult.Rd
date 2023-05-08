@@ -4,10 +4,12 @@
 \alias{plot.SIMEXResult}
 \title{Plot the Observed and Predicted Parameter Estimates}
 \usage{
-\method{plot}{SIMEXResult}(object)
+\method{plot}{SIMEXResult}(x, ...)
 }
 \arguments{
-\item{obj}{an instance of the S3 class SIMEXResult}
+\item{x}{an instance of the S3 class SIMEXResult}
+
+\item{...}{absolutely useless, just to keep the signature consistent for inheritance}
 }
 \description{
 Plot the Observed and Predicted Parameter Estimates

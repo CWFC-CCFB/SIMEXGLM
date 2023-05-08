@@ -4,10 +4,12 @@
 \alias{summary.SIMEXResult}
 \title{Provide a Summary Adapted to the SIMEX Method}
 \usage{
-\method{summary}{SIMEXResult}(object)
+\method{summary}{SIMEXResult}(object, ...)
 }
 \arguments{
-\item{obj}{an instance of the S3 class SIMEXResult}
+\item{object}{an instance of the S3 class SIMEXResult}
+
+\item{...}{absolutely useless, just to keep the signature consistent for inheritance}
 }
 \description{
 Provide a Summary Adapted to the SIMEX Method

@@ -1,20 +1,21 @@
 Package: SIMEXGLM
 Type: Package
-Title: SIMEX Procedure for Logistic Regression with Measurement Errors
-Version: 1.1.2
+Title: SIMEX Procedure for Regression with Measurement Errors
+Version: 1.2.0
 Author: Mathieu Fortin
 Maintainer: Mathieu Fortin <mathieu.fortin.re@gmail.com>
 Description: Implement the SIMEX procedure for logistic and negative binomial 
    models with measurement errors.
 URL: https://github.com/CWFC-CCFB/SIMEXGLM
-Depends: R (>= 4.2.1)
+Depends: R (>= 4.3.0)
 Imports: 
-    J4R (>= 1.1.9),
-    ggplot2 (>= 3.3.6)
+    J4R (>= 1.2.1),
+    ggplot2 (>= 3.4.2),
+    stats (>= 4.3.0)
 License: LGPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 SystemRequirements: Java 8
 Suggests: 
     testthat (>= 3.0.0)

@@ -5,7 +5,7 @@
 ########################################################
 
 
-repiceaFilename <- "repicea-1.7.1.jar"
+jarFilenames <- c("repicea-1.9.4.jar", "repicea-mathstats-1.1.3.jar")
 
 .welcomeMessage <- function() {
   packageStartupMessage("Welcome to SIMEXGLM!")
@@ -21,11 +21,11 @@ repiceaFilename <- "repicea-1.7.1.jar"
 }
 
 .onUnload <- function(libpath) {
-  shutdownJava()
+  shutdownClient()
 }
 
 .onDetach <- function(libpath) {
-  shutdownJava()
+  shutdownClient()
 }
 
 
@@ -94,29 +94,6 @@ shutdownClient <- function() {
 }
 
 
-.isAlreadyLoaded <- function() {
-  if (J4R::isConnectedToJava()) {
-    if (J4R::checkIfClasspathContains(repiceaFilename)) {
-      return(TRUE)
-    } else {
-      stop("The package is connect to Java but the required Java library is not part of the classpath! Please shutDownJava() first!")
-    }
-  } else {
-    return(FALSE)
-  }
-}
-
-
-.connectToJava <- function(debug = F) {
-  if (debug) {
-    J4R::connectToJava(port = 18011:18012, internalPort = 50000:50001, public=T, key=1000000)
-  } else {
-    repiceaPath <- normalizePath(system.file(repiceaFilename, package="SIMEXGLM"))
-    #  repiceaPath <- normalizePath(paste(find.package("SIMEXGLM"), repiceaFilename, sep="/"))
-    J4R::connectToJava(extensionPath = repiceaPath)
-  }
-}
-
 
 #' Create a Data Structure
 #'
@@ -129,7 +106,7 @@ shutdownClient <- function() {
 #'
 #' @export
 createDataSet <- function(formula, data, varianceFieldName = NULL) {
-  .connect()
+  .loadLibrary()
   formattedString <- J4R::callJavaMethod(formula, "replace", "\n", "")
   formattedString <- J4R::callJavaMethod(formattedString, "replace", " ", "")
   firstSplit <- J4R::getAllValuesFromListObject(J4R::callJavaMethod("repicea.util.ObjectUtility", "decomposeUsingToken", formattedString, "~"))
@@ -188,7 +165,6 @@ createDataSet <- function(formula, data, varianceFieldName = NULL) {
 #' @param nbBootstrapRealizations the number of bootstrap realizations for each level of inflated variance (is
 #' set to 100 by default )
 #' @param nbThreads the number of threads to process the bootstrap realizations (is set to 2 by default)
-#' @param debug a logical to enable the debug mode
 #'
 #' @return an instance of the S3 SIMEXResult class
 #'
@@ -201,13 +177,12 @@ SIMEXGLM <- function(formula,
                      varianceFieldName,
                      factors = seq(0, 2, by=.2),
                      nbBootstrapRealizations = 100,
-                     nbThreads = 2,
-                     debug = F) {
-  .connect(debug)
+                     nbThreads = 2) {
+  .loadLibrary()
   message("SIMEX: Converting data.frame instance to Java object...")
   simexDataSet <- .convertDataIfNeeded(formula, data, varianceFieldName)
   linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
-  message("SIMEX: Fitting preliminary model (without considering measurement errors)...")
+  message("SIMEX: Fitting preliminary model (without consideration for measurement errors)...")
   distribution <- J4R::createJavaObject("repicea.stats.model.glm.Family$GLMDistribution", dist)
   genLinMod <- J4R::createJavaObject("repicea.stats.model.glm.GeneralizedLinearModel",
                                      simexDataSet,
@@ -232,14 +207,26 @@ SIMEXGLM <- function(formula,
   return(simexResult)
 }
 
-.connect <- function(debug = F) {
-  if (debug) {
-    if (!J4R::isConnectedToJava()) {
-      message("GLM: Connecting to Java in debug mode")
-      .connectToJava(debug)
+
+.loadLibrary <- function(memSize = NULL) {
+  if (J4R::isConnectedToJava()) {
+    for (jarName in jarFilenames) {
+      if (!J4R::checkIfClasspathContains(jarName)) {
+        stop(paste("It seems J4R is running but the class path does not contain this library: ", jarName, ". Shut down J4R using the shutdownClient function first and then re-run your code."))
+      }
     }
-  } else if (!.isAlreadyLoaded()) {
-    .connectToJava(debug)
+  } else {
+    path <- system.file(jarFilenames, package = "SIMEXGLM", mustWork = T)
+    J4R::connectToJava(extensionPath = path, memorySize = memSize)
+    for (jarName in jarFilenames) {
+      if (!J4R::checkIfClasspathContains(jarName)) {
+        stop(paste("It seems J4R has not been able to load the", jarName, "library."))
+      }
+    }
+    loggerName <- J4R::getJavaField("repicea.stats.estimators.MaximumLikelihoodEstimator", "LOGGER_NAME")
+    logger <- J4R::callJavaMethod("repicea.util.REpiceaLogManager", "getLogger", loggerName)
+    level <- J4R::getJavaField("java.util.logging.Level", "WARNING")
+    logger$setLevel(level)
   }
 }
 
@@ -254,18 +241,16 @@ SIMEXGLM <- function(formula,
 #' @param linkFunction the link function (either "Logit" or "CLogLog" for the Bernoulli distribution
 #' or "Log" for the negative binomial)
 #' @param data a data.frame object
-#' @param debug a logical to enable the debug mode
 #'
 #' @return a java.object instance
 #'
 GLM <- function(formula,
                      dist = c("Bernoulli", "NegativeBinomial"),
                      linkFunction = c("Logit", "CLogLog","Log"),
-                     data,
-                     debug = F) {
-  .connect(debug)
+                     data) {
+  .loadLibrary()
   message("GLM: Converting data.frame instance to Java object...")
-  glmDataSet <- .convertDataIfNeeded(formula, data, varianceFieldName)
+  glmDataSet <- .convertDataIfNeeded(formula, data)
   linkFunctionType <- J4R::createJavaObject("repicea.stats.model.glm.LinkFunction$Type", linkFunction)
   message("GLM: Fitting model...")
   distribution <- J4R::createJavaObject("repicea.stats.model.glm.Family$GLMDistribution", dist)

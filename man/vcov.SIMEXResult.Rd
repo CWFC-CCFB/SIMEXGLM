@@ -7,7 +7,7 @@
 \method{vcov}{SIMEXResult}(object)
 }
 \arguments{
-\item{obj}{an instance of the S3 class SIMEXResult}
+\item{object}{an instance of the S3 class SIMEXResult}
 }
 \value{
 a matrix

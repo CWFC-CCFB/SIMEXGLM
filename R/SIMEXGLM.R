@@ -190,12 +190,18 @@ SIMEXGLM <- function(formula,
                                      linkFunctionType,
                                      formula)
   genLinMod$doEstimation()
+  if (!genLinMod$getEstimator()$isConvergenceAchieved()) {
+    stop("Convergence could not be achieved!")
+  }
   message("SIMEX: Running SIMEX procedure. This may take a while...")
   simexMod <- J4R::createJavaObject("repicea.stats.model.glm.measerr.SIMEXModel", genLinMod, fieldWithMeasError, varianceFieldName)
   simexMod$setNumberOfBootstrapRealizations(as.integer(nbBootstrapRealizations))
   simexMod$setNbThreads(as.integer(nbThreads))
   simexMod$setFactors(J4R::as.JavaArray(factors))
   simexMod$doEstimation()
+  if (!simexMod$getEstimator()$isConvergenceAchieved()) {
+    stop("Convergence could not be achieved!")
+  }
   simexResult <- new_SIMEXResult(genLinMod,
                                  simexMod,
                                  formula,

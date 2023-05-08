@@ -7,6 +7,14 @@ The SIMEXGLM package
 
 An R package implementing the SIMEX technique for classical additive measurement errors in generalized linear models.
 
+## Table of content
+
+1. [Introduction](#Introduction)
+2. [How to install the package](#how-to-install-the-package)
+3. [Examples of code](#examples-of-code)
+4. [References](#references)
+
+
 ## Introduction
 
 The SIMEX technique accounts for additive measurement errors in explanatory variables when fitting a statistical model. This technique was initially developed by [Cook and Stefanski 1994](https://doi.org/10.1080/01621459.1994.10476871) and [Stefanski and Cook 1995](https://doi.org/10.1080/01621459.1995.10476629). [Caroll et al. 2006](https://www.taylorfrancis.com/books/mono/10.1201/9781420010138/measurement-error-nonlinear-models-ciprian-crainiceanu-raymond-carroll-leonard-stefanski-david-ruppert) also includes a complete chapter on this technique.  
@@ -38,7 +46,7 @@ library(remotes)
 install_github("CWFC-CCFB/SIMEXGLM") ### install SIMEXGLM directly from GitHub
 ~~~
 
-## Example of code
+## Examples of code
 
 Here is an example with the logistic regression with the complementary log-log link function:
 

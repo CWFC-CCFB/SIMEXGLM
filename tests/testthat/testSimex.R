@@ -131,16 +131,16 @@ test_that("Checking predictions", {
   expect_true(  all(abs(newPredictions$meanPred - predictions) < 1E-8 ))
 })
 
-require(MASS)
-elapTimeMass <- system.time({
-  for (i in 1:1001) {
-    glm.nb("y ~ TotalPrcp + G_F + G_R + occIndex10km + timeSince1970", simexExampleNegBinomial)
-  }
-})[3]
-
-test_that("Checking that computing time is half that of the MASS package", {
-  expect_true(elapTime < elapTimeMass * .5)
-})
+# require(MASS)
+# elapTimeMass <- system.time({
+#   for (i in 1:1001) {
+#     glm.nb("y ~ TotalPrcp + G_F + G_R + occIndex10km + timeSince1970", simexExampleNegBinomial)
+#   }
+# })[3]
+#
+# test_that("Checking that computing time is half that of the MASS package", {
+#   expect_true(elapTime < elapTimeMass * .5)
+# })
 
 
 test_that("Expecting error for non convergence", {

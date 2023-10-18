@@ -3,6 +3,7 @@ The SIMEXGLM package
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/CWFC-CCFB/SIMEXGLM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CWFC-CCFB/SIMEXGLM/actions/workflows/R-CMD-check.yaml)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 <!-- badges: end -->
 
 An R package implementing the SIMEX technique for classical additive measurement errors in generalized linear models.
@@ -26,9 +27,13 @@ The SIMEXGLM package implements the SIMEX technique with the following statistic
 
 Compared to other existing packages implementing the SIMEX technique, the SIMEXGLM package allows the specification of multiple terms involving the linear term plus some transformation of the variables with measurement errors. For instance, if W is the variable with measurement error, the package allows the fit of the model E[Y] = g(W, W<sup>2</sup>), with g being the link function. An example of code is shown below. 
 
-The source code of the SIMEXGLM package is freely available at https://github.com/CWFC-CCFB/SIMEXGLM .
-
+The source code of the SIMEXGLM package is freely available at https://github.com/CWFC-CCFB/SIMEXGLM . 
 The SIMEXGLM package is licensed under the GNU Lesser General Public License v3.0 (LGPL-3).
+
+The backend of this R package is implemented in Java in two libraries:
+
+* repicea, licensed under LGPL-3 (https://github.com/CWFC-CCFB/repicea)
+* repicea-mathstats, licensed under LGPL-3 (https://github.com/CWFC-CCFB/repicea-mathstats)
 
 Tickets can be created at https://github.com/CWFC-CCFB/SIMEXGLM/issues .
 
@@ -38,7 +43,9 @@ e-mail: mathieu.fortin.re@gmail.com
 
 ## How to install the package
 
-The SIMEXGLM package depends on J4R. You must copy and paste these two lines of code in your R console:
+The SIMEXGLM package depends on J4R for accessing the Java library. Java version 8 or later must be installed on your computer. Please see https://github.com/CWFC-CCFB/J4R/wiki#requirements for more information.
+
+Once Java is installed on your computed, you just have to copy and paste these lines of code in your R console:
 
 ~~~R
 install.packages("https://sourceforge.net/projects/repiceasource/files/latest/download", repos = NULL,  type="source") ### To install J4R (dependency)
